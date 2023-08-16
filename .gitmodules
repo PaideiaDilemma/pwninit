@@ -1,0 +1,3 @@
+[submodule "patchelfdd"]
+	path = patchelfdd
+	url = https://github.com/PaideiaDilemma/patchelfdd

@@ -56,6 +56,10 @@ pub struct Opts {
     #[structopt(long)]
     pub template_path: Option<PathBuf>,
 
+    /// Weather to use patchelf to patch the binary.
+    #[structopt(long)]
+    pub use_patchelf: bool,
+
     /// Name of binary variable for pwntools solve script
     #[structopt(long)]
     #[structopt(default_value = "exe")]

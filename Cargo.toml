@@ -14,6 +14,7 @@ opt-level = 'z'
 lto = true
 
 [dependencies]
+patchelfdd = { path = "./patchelfdd/" }
 twoway = "0.2.2"
 structopt = "0.3.26"
 goblin = "0.6.0"

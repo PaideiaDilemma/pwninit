@@ -40,6 +40,38 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 const LIBC_FILE_NAME: &str = "libc.so.6";
 
+fn run_patchelfdd(bin: &Path, opts: &Opts) -> Result<()> {
+    println!(
+        "{}",
+        format!("patching elf {}", bin.to_string_lossy().bold()).green()
+    );
+
+    let mut patch_opts = patchelfdd::opts::Opts {
+        bin: bin.to_path_buf(),
+        set_runpath: None,
+        set_interpreter: None,
+    };
+
+    if let Some(lib_dir) = opts
+        .libc
+        .as_ref()
+        // Prepend "." in case `libc`'s `parent()` is an empty path.
+        .and_then(|libc| Path::new(".").join(libc).parent().map(Path::to_path_buf))
+    {
+        patch_opts.set_runpath = Some(lib_dir.to_string_lossy().to_string());
+    };
+
+    if let Some(ld) = &opts.ld {
+        patch_opts.set_interpreter = Some(ld.to_string_lossy().to_string());
+    };
+
+    if let Err(err) = patchelfdd::run(patch_opts) {
+        eprintln!("{}", format!("Error - {}", err).red());
+        return Err(Error::Patchelf);
+    }
+    Ok(())
+}
+
 /// Run `patchelf` on the binary `bin`.
 ///
 /// If `opts` has a libc, make its directory the RPATH of the binary.
@@ -156,7 +188,11 @@ pub fn patch_bin(opts: &Opts) -> Result<()> {
 
         let bin_patched = copy_patched(bin)?;
 
-        run_patchelf(&bin_patched, opts)?;
+        if opts.use_patchelf {
+            run_patchelf(&bin_patched, opts)?;
+        } else {
+            run_patchelfdd(&bin_patched, opts)?;
+        }
     }
 
     Ok(())
